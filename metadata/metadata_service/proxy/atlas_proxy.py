@@ -778,7 +778,7 @@ class AtlasProxy(BaseProxy):
             db_cluster = table_info.get('cluster', '')
 
             popular_table = PopularTable(
-                database=table.typeName,
+                database=table_info['database'],
                 cluster=db_cluster,
                 schema=schema_name,
                 name=table_name,
