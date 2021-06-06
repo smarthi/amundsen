@@ -1250,7 +1250,7 @@ class AtlasProxy(BaseProxy):
             try:
                 last_execution = executions_attributes[0]
             except IndexError:
-                last_execution = dict(timestamp=0, state='n/a')
+                last_execution = dict(timestamp=0, state='Unknown')
 
             owners = self._get_owners(relationships.get('ownedBy', []))
             readers = self._get_readers(entity.entity, User)
@@ -1262,7 +1262,7 @@ class AtlasProxy(BaseProxy):
                 updated_timestamp=attributes.get('lastModifiedTimestamp', 0),
                 owners=owners,
                 last_run_timestamp=last_execution.get('timestamp', 0),
-                last_run_state=last_execution.get('state', 'n/a'),
+                last_run_state=last_execution.get('state', 'Unknown'),
                 query_names=query_names,
                 queries=queries,
                 tables=tables,
