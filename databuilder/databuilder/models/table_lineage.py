@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
-
 from typing import (
     Iterator, List, Union,
 )
 
 from amundsen_common.utils.atlas import AtlasCommonParams, AtlasTableTypes
+
 from databuilder.models.atlas_entity import AtlasEntity
 from databuilder.models.atlas_relationship import AtlasRelationship
 from databuilder.models.atlas_serializable import AtlasSerializable

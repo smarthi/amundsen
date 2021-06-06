@@ -15,10 +15,10 @@ from amundsen_common.models.feature import Feature
 from amundsen_common.models.lineage import Lineage, LineageItem
 from amundsen_common.models.popular_table import PopularTable
 from amundsen_common.models.query import Query
-from amundsen_common.models.table import (Badge, Column,
+from amundsen_common.models.table import (Application, Badge, Column,
                                           ProgrammaticDescription, Reader,
                                           ResourceReport, Stat, Table, Tag,
-                                          User, Watermark, Application)
+                                          User, Watermark)
 from amundsen_common.models.user import User as UserEntity
 from amundsen_common.utils.atlas import (AtlasColumnKey, AtlasCommonParams,
                                          AtlasCommonTypes, AtlasDashboardTypes,
