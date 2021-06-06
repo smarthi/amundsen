@@ -173,6 +173,10 @@ class AtlasKey(abc.ABC):
         """
         pass
 
+    @property
+    def entity_type(self) -> str:
+        return self.get_details()['database'] if self.get_details()['database'].endswith('_table') else 'Table'
+
 
 class AtlasTableKey(AtlasKey):
     @property
@@ -185,7 +189,7 @@ class AtlasTableKey(AtlasKey):
 
     @property
     def qualified_name(self) -> str:
-        if not self.is_qualified_name:
+        if not self.is_qualified_name and self.get_details()['database'].endswith('_table'):
             spec = self._get_details_from_key()
 
             schema = spec['schema']

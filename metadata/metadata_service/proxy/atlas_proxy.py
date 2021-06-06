@@ -141,17 +141,11 @@ class AtlasProxy(BaseProxy):
         """
         key = AtlasTableKey(table_uri)
 
-        # hive_table comes from hive hook and follows Atlas qualified name.
-        # for every other kind of table we use generic Table type which is assumed to come from databuilder extractors
-        # and where qualified_name is rendered as amundsen_key
-        type_name = 'hive_table' if key.get_details()['database'] == 'hive_table' else 'Table'
-        qualified_name = key.qualified_name if key.get_details()['database'] == 'hive_table' else key.amundsen_key
-
         try:
-            return self.client.entity.get_entity_by_attribute(type_name=type_name,
+            return self.client.entity.get_entity_by_attribute(type_name=key.entity_type,
                                                               uniq_attributes=[
                                                                   (AtlasCommonParams.qualified_name,
-                                                                   qualified_name)])
+                                                                   key.qualified_name)])
         except Exception as ex:
             LOGGER.exception(f'Table not found. {str(ex)}')
             raise NotFoundException(f'Table URI( {table_uri} ) does not exist')
@@ -1366,8 +1360,11 @@ class AtlasProxy(BaseProxy):
         guids = [d.get(AtlasCommonParams.guid) for d in
                  self._filter_active(table.entity[AtlasCommonParams.relationships].get(resource, []))]
 
-        entities = self.client.entity.get_entities_by_guids(guids=guids)
-        result = serialize_function(entities)
+        if guids:
+            entities = self.client.entity.get_entities_by_guids(guids=guids)
+            result = serialize_function(entities)
+        else:
+            result = []
 
         return {resource: result}
 
@@ -1597,11 +1594,9 @@ class AtlasProxy(BaseProxy):
 
             key = key_class(id)  # type: ignore
 
-            entity_id = key.qualified_name if key.get_details()['database'] == 'hive_table' else key.amundsen_key
-
             entity = self.client.entity.get_entity_by_attribute(type_name=resource_type.name,
                                                                 uniq_attributes=[(AtlasCommonParams.qualified_name,
-                                                                                  entity_id)])
+                                                                                  key.qualified_name)])
 
             entity_guid = entity.entity.guid
 

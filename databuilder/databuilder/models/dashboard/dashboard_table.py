@@ -128,15 +128,10 @@ class DashboardTable(GraphSerializable, TableSerializable, AtlasSerializable):
         for table_id in self._table_ids:
             key = AtlasTableKey(table_id)
 
-            entity_id = key.qualified_name \
-                if key.get_details()['database'] == 'hive_table' else key.amundsen_key
-
-            entity_type = key.get_details()['database'] if key.get_details()['database'] == 'hive_table' else 'Table'
-
             table_relationship = AtlasRelationship(
                 relationshipType=AtlasRelationshipTypes.table_dashboard,
-                entityType1=entity_type,
-                entityQualifiedName1=entity_id,
+                entityType1=key.entity_type,
+                entityQualifiedName1=key.qualified_name,
                 entityType2=AtlasDashboardTypes.metadata,
                 entityQualifiedName2=DashboardMetadata.DASHBOARD_KEY_FORMAT.format(
                     product=self._product,
