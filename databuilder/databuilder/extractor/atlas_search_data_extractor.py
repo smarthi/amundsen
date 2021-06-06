@@ -6,14 +6,14 @@ import logging
 import multiprocessing.pool
 from copy import deepcopy
 from functools import reduce
-
-from atlasclient.client import Atlas
-from pyhocon import ConfigFactory, ConfigTree
 from typing import (
     Any, Dict, Generator, Iterator, List, Optional, Tuple,
 )
 
 from amundsen_common.utils.atlas import AtlasTableKey
+from atlasclient.client import Atlas
+from pyhocon import ConfigFactory, ConfigTree
+
 from databuilder.extractor.base_extractor import Extractor
 
 LOGGER = logging.getLogger(__name__)
