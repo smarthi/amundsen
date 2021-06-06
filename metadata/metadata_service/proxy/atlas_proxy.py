@@ -18,7 +18,7 @@ from amundsen_common.models.query import Query
 from amundsen_common.models.table import (Badge, Column,
                                           ProgrammaticDescription, Reader,
                                           ResourceReport, Stat, Table, Tag,
-                                          User, Watermark)
+                                          User, Watermark, Application)
 from amundsen_common.models.user import User as UserEntity
 from amundsen_common.utils.atlas import (AtlasColumnKey, AtlasCommonParams,
                                          AtlasCommonTypes, AtlasDashboardTypes,
@@ -141,11 +141,17 @@ class AtlasProxy(BaseProxy):
         """
         key = AtlasTableKey(table_uri)
 
+        # hive_table comes from hive hook and follows Atlas qualified name.
+        # for every other kind of table we use generic Table type which is assumed to come from databuilder extractors
+        # and where qualified_name is rendered as amundsen_key
+        type_name = 'hive_table' if key.get_details()['database'] == 'hive_table' else 'Table'
+        qualified_name = key.qualified_name if key.get_details()['database'] == 'hive_table' else key.amundsen_key
+
         try:
-            return self.client.entity.get_entity_by_attribute(type_name=key.get_details()['database'],
+            return self.client.entity.get_entity_by_attribute(type_name=type_name,
                                                               uniq_attributes=[
                                                                   (AtlasCommonParams.qualified_name,
-                                                                   key.qualified_name)])
+                                                                   qualified_name)])
         except Exception as ex:
             LOGGER.exception(f'Table not found. {str(ex)}')
             raise NotFoundException(f'Table URI( {table_uri} ) does not exist')
@@ -411,7 +417,7 @@ class AtlasProxy(BaseProxy):
         try:
             attrs = table_details[AtlasCommonParams.attributes]
 
-            programmatic_descriptions = self._get_programmatic_descriptions(attrs.get('parameters', dict()))
+            programmatic_descriptions = self._get_programmatic_descriptions(attrs.get('parameters', dict()) or dict())
 
             table_info = AtlasTableKey(attrs.get(AtlasCommonParams.qualified_name)).get_details()
 
@@ -426,9 +432,11 @@ class AtlasProxy(BaseProxy):
             is_view = 'view' in table_type.lower()
 
             readers = self._get_readers(table_details, Reader)
+            application = self._get_application(table_details)
 
             table = Table(
-                database=table_details.get('typeName'),
+                table_writer=application,
+                database=AtlasTableKey(table_uri).get_details()['database'],
                 cluster=table_info.get('cluster', ''),
                 schema=table_info.get('schema', ''),
                 name=attrs.get('name') or table_info.get('table', ''),
@@ -1097,6 +1105,28 @@ class AtlasProxy(BaseProxy):
         result = result[:top]
 
         return result
+
+    def _get_application(self, entity: AtlasEntityWithExtInfo) -> Optional[Application]:
+        _applications = entity.get(AtlasCommonParams.relationships, dict()).get('applications', list())
+
+        guids = [a.get(AtlasCommonParams.guid) for a in self._filter_active(_applications)]
+
+        if not guids:
+            return None
+
+        applications = self.client.entity.get_entities_by_guids(guids=list(guids), ignore_relationships=False)
+
+        _result = []
+
+        for _app in applications.entities or list():
+            url = _app.attributes.get('application_url', '')
+            description = _app.attributes.get('description', '')
+            id = _app.attributes.get('id', '')
+            name = _app.attributes.get('name', '')
+
+            app = Application(application_url=url, description=description, id=id, name=name)
+
+            return app
 
     def _get_programmatic_descriptions(self, parameters: dict) -> List[ProgrammaticDescription]:
         programmatic_descriptions: Dict[str, ProgrammaticDescription] = {}

@@ -10,6 +10,7 @@ from typing import (
     Any, Dict, Generator, Iterator, List, Optional, Tuple,
 )
 
+from amundsen_common.utils.atlas import AtlasTableKey
 from atlasclient.client import Atlas
 from pyhocon import ConfigFactory, ConfigTree
 
@@ -80,6 +81,21 @@ class AtlasSearchDataExtractorHelpers:
 
         return AtlasSearchDataExtractorHelpers.get_display_text(charts)
 
+    @staticmethod
+    def get_table_database(qualified_name: str) -> str:
+        try:
+            result = AtlasTableKey(qualified_name).get_details()['database']
+        except:
+            result = 'hive_table'
+
+        return result
+
+    @staticmethod
+    def get_source_description(parameters: Optional[dict]) -> str:
+        parameters = parameters or dict()
+
+        return parameters.get('sourceDescription', '')
+
 
 class AtlasSearchDataExtractor(Extractor):
     ATLAS_URL_CONFIG_KEY = 'atlas_url'
@@ -110,9 +126,12 @@ class AtlasSearchDataExtractor(Extractor):
     # es_document field, atlas field path, modification function, default_value
     FIELDS_MAPPING_SPEC: type_fields_mapping_spec = {
         'Table': [
-            ('database', 'typeName', None, None),
-            ('cluster', 'attributes.qualifiedName', lambda x: x.split('@')[-1], None),
-            ('schema', 'relationshipAttributes.db.displayText', None, None),
+            ('database', 'attributes.qualifiedName',
+             lambda x: AtlasSearchDataExtractorHelpers.get_table_database(x), None),
+            ('cluster', 'attributes.qualifiedName',
+             lambda x: AtlasTableKey(x).get_details()['cluster'], None),
+            ('schema', 'attributes.qualifiedName',
+             lambda x: AtlasTableKey(x).get_details()['schema'], None),
             ('name', 'attributes.name', None, None),
             ('key', 'attributes.qualifiedName', None, None),
             ('description', 'attributes.description', None, None),
@@ -127,8 +146,11 @@ class AtlasSearchDataExtractor(Extractor):
              lambda x: AtlasSearchDataExtractorHelpers.get_display_text(x), []),
             ('badges', 'classifications',
              lambda x: AtlasSearchDataExtractorHelpers.get_badges_from_classifications(x), []),
-            ('display_name', 'attributes.qualifiedName', lambda x: x.split('@')[0], None),
-            ('schema_description', 'attributes.parameters.sourceDescription', None, None),
+            ('display_name', 'attributes.qualifiedName',
+             lambda x: '.'.join([AtlasTableKey(x).get_details()['schema'], AtlasTableKey(x).get_details()['table']]),
+             None),
+            ('schema_description', 'attributes.parameters',
+             lambda x: AtlasSearchDataExtractorHelpers.get_source_description(x), ''),
             ('programmatic_descriptions', 'attributes.parameters', lambda x: [str(s) for s in list(x.values())], {})
         ],
         'Dashboard': [
