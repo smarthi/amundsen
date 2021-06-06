@@ -6,14 +6,14 @@ import logging
 import multiprocessing.pool
 from copy import deepcopy
 from functools import reduce
+
+from atlasclient.client import Atlas
+from pyhocon import ConfigFactory, ConfigTree
 from typing import (
     Any, Dict, Generator, Iterator, List, Optional, Tuple,
 )
 
 from amundsen_common.utils.atlas import AtlasTableKey
-from atlasclient.client import Atlas
-from pyhocon import ConfigFactory, ConfigTree
-
 from databuilder.extractor.base_extractor import Extractor
 
 LOGGER = logging.getLogger(__name__)
@@ -174,17 +174,35 @@ class AtlasSearchDataExtractor(Extractor):
              lambda x: AtlasSearchDataExtractorHelpers.get_display_text(x), []),
             ('badges', 'classifications',
              lambda x: AtlasSearchDataExtractorHelpers.get_badges_from_classifications(x), [])
+        ],
+        'User': [
+            ('email', 'attributes.name', None, ''),
+            ('first_name', 'attributes.first_name', None, ''),
+            ('last_name', 'attributes.last_name', None, ''),
+            ('full_name', 'attributes.full_name', None, ''),
+            ('github_username', 'attributes.github_username', None, ''),
+            ('team_name', 'attributes.team_name', None, ''),
+            ('employee_type', 'attributes.employee_type', None, ''),
+            ('manager_email', 'attributes.manager_email', None, ''),
+            ('slack_id', 'attributes.slack_id', None, ''),
+            ('role_name', 'attributes.role_name', None, ''),
+            ('is_active', 'attributes.is_active', None, ''),
+            ('total_read', 'attributes.total_read', None, ''),
+            ('total_own', 'attributes.total_own', None, ''),
+            ('total_follow', 'attributes.total_follow', None, '')
         ]
     }
 
     ENTITY_MODEL_BY_TYPE = {
         'Table': 'databuilder.models.table_elasticsearch_document.TableESDocument',
-        'Dashboard': 'databuilder.models.dashboard_elasticsearch_document.DashboardESDocument'
+        'Dashboard': 'databuilder.models.dashboard_elasticsearch_document.DashboardESDocument',
+        'User': 'databuilder.models.user_elasticsearch_document.UserESDocument'
     }
 
     REQUIRED_RELATIONSHIPS_BY_TYPE = {
         'Table': ['columns'],
-        'Dashboard': ['group', 'charts', 'executions', 'queries']
+        'Dashboard': ['group', 'charts', 'executions', 'queries'],
+        'User': []
     }
 
     def init(self, conf: ConfigTree) -> None:
