@@ -1597,9 +1597,11 @@ class AtlasProxy(BaseProxy):
 
             key = key_class(id)  # type: ignore
 
+            entity_id = key.qualified_name if key.get_details()['database'] == 'hive_table' else key.amundsen_key
+
             entity = self.client.entity.get_entity_by_attribute(type_name=resource_type.name,
                                                                 uniq_attributes=[(AtlasCommonParams.qualified_name,
-                                                                                  key.qualified_name)])
+                                                                                  entity_id)])
 
             entity_guid = entity.entity.guid
 

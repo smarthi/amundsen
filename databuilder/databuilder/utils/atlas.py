@@ -8,6 +8,8 @@ class AtlasRelationshipTypes:
     dashboard_owner = 'Dashboard_Users_Owner'
     table_application = 'DataSet__Application'
     table_source = 'Source__Tables'
+    lineage_upstream = 'dataset_process_inputs'
+    lineage_downstream = 'process_dataset_outputs'
 
 
 class AtlasSerializedRelationshipFields:

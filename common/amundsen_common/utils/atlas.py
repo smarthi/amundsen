@@ -37,6 +37,7 @@ class AtlasTableTypes:
     schema = 'Schema'
     source = 'Source'
     watermark = 'TablePartition'
+    process = 'LineageProcess'
 
 
 class AtlasDashboardTypes:
